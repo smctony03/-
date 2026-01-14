@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>음식 월드컵</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Jua', sans-serif; background-color: #121212; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; user-select: none; }
+        h1 { color: #FFD700; margin-bottom: 10px; }
+        .game-container { display: flex; gap: 40px; margin-top: 20px; }
+        .card { width: 300px; height: 420px; background: #333; border: 3px solid #555; border-radius: 20px; cursor: pointer; transition: 0.2s; }
+        .card:hover { transform: translateY(-10px); border-color: #FF6B6B; }
+        .card img { width: 100%; height: 80%; object-fit: cover; border-bottom: 2px solid #555; }
+        .card h2 { text-align: center; color: white; margin: 20px 0; }
+        .info { color: #00d2d3; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+<h1 th:if="${mode == 'multi'}" th:text="'📢 참가자 ' + ${currentPerson} + ' / ' + ${totalPeople} + ' 차례'"></h1>
+<h1 th:unless="${mode == 'multi'}">🍜 오늘 뭐 먹지? 🍕</h1>
+
+<div id="round-status" class="info">강 진행 중</div>
+
+<div class="game-container">
+    <div class="card" onclick="choose(0)">
+        <img id="img-left" src="">
+        <h2 id="name-left">음식1</h2>
+    </div>
+    <div class="card" onclick="choose(1)">
+        <img id="img-right" src="">
+        <h2 id="name-right">음식2</h2>
+    </div>
+</div>
+
+<form id="nextPersonForm" action="/next-person" method="post" style="display:none;">
+    <input type="hidden" name="myFoods" th:value="${myFoodsRaw}">
+    <input type="hidden" name="round" th:value="${roundRaw}">
+    <input type="hidden" name="currentPerson" th:value="${currentPerson}">
+    <input type="hidden" name="totalPeople" th:value="${totalPeople}">
+
+    <input type="hidden" name="historyData" id="historyInput">
+    <input type="hidden" name="accumulatedHistory" th:value="${accumulatedHistory}">
+</form>
+
+<script th:inline="javascript">
+    let foods = [[${foods}]];
+    let mode = [[${mode}]];
+    // 현재 순서와 총 인원수 가져오기
+    let currentPerson = [[${currentPerson}]];
+    let totalPeople = [[${totalPeople}]];
+
+    foods.sort(() => Math.random() - 0.5);
+
+    let currentRoundFoods = foods;
+    let nextRoundFoods = [];
+    let currentIdx = 0;
+
+    // 내가 선택한 모든 음식을 저장할 배열
+    let mySelectionHistory = [];
+
+    updateScreen();
+
+    function updateScreen() {
+        if (currentIdx >= currentRoundFoods.length) {
+            currentRoundFoods = nextRoundFoods;
+            nextRoundFoods = [];
+            currentIdx = 0;
+
+            // 우승자 결정 시점 (게임 종료)
+            if (currentRoundFoods.length === 1) {
+                let winnerName = currentRoundFoods[0].name;
+                mySelectionHistory.push(winnerName); // 우승자도 기록에 추가
+
+                // 1. 같이 하기 모드
+                if (mode === 'multi') {
+                    // ★★★ 수정된 로직: 마지막 사람인지 체크 ★★★
+                    if (currentPerson < totalPeople) {
+                        // 중간 사람인 경우에만 알림창 띄움
+                        alert("🎉 [" + winnerName + "] 선택 완료! 다음 사람에게 넘깁니다.");
+                    }
+                    // 마지막 사람은 알림창 없이 바로 결과 페이지로 이동 (Form 제출)
+
+                    document.getElementById('historyInput').value = mySelectionHistory.join(",");
+                    document.getElementById('nextPersonForm').submit();
+                }
+                // 2. 혼자 하기 모드
+                else {
+                    handleSoloWin(winnerName);
+                }
+                return;
+            }
+        }
+        // 화면 갱신
+        document.getElementById("round-status").innerText = (currentRoundFoods.length === 2 ? "👑 결승전 👑" : currentRoundFoods.length + "강");
+        document.getElementById("img-left").src = currentRoundFoods[currentIdx].imgUrl;
+        document.getElementById("name-left").innerText = currentRoundFoods[currentIdx].name;
+        document.getElementById("img-right").src = currentRoundFoods[currentIdx+1].imgUrl;
+        document.getElementById("name-right").innerText = currentRoundFoods[currentIdx+1].name;
+    }
+
+    function choose(idx) {
+        // 클릭할 때마다 선택한 음식을 기록
+        let pickedFood = currentRoundFoods[currentIdx + idx];
+        mySelectionHistory.push(pickedFood.name);
+
+        nextRoundFoods.push(pickedFood);
+        currentIdx += 2;
+        updateScreen();
+    }
+
+    function handleSoloWin(winnerName) {
+        let firstWinner = localStorage.getItem("firstWinner");
+        if (!firstWinner) {
+            alert("1차전 우승: [" + winnerName + "]");
+            localStorage.setItem("firstWinner", winnerName);
+            localStorage.setItem("foodHistory", mySelectionHistory.join(","));
+            location.reload();
+        } else {
+            let fullHistory = localStorage.getItem("foodHistory") + "," + mySelectionHistory.join(",");
+            localStorage.removeItem("firstWinner");
+            localStorage.removeItem("foodHistory");
+            location.href = "/result?winner1=" + encodeURIComponent(firstWinner)
+                + "&winner2=" + encodeURIComponent(winnerName)
+                + "&history=" + encodeURIComponent(fullHistory);
+        }
+    }
+</script>
+</body>
+</html>

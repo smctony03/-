@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>오늘 뭐 먹지?</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; text-align: center; padding-top: 50px; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        input { width: 80%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; }
+        button { background-color: #FF6B6B; color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; margin-top: 20px; }
+        .mode-box { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .mode-label { padding: 10px 20px; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; }
+        input[type="radio"] { display: none; }
+        input[type="radio"]:checked + .mode-label { background-color: #FFD700; color: white; border-color: #FFD700; font-weight: bold; }
+        #people-section { display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏆 오늘 뭐 먹지? 🏆</h1>
+    <form action="/start-custom" method="post">
+        <p>1. <strong>누구랑 드시나요?</strong></p>
+        <div class="mode-box">
+            <input type="radio" id="solo" name="mode" value="solo" checked onclick="togglePeople(false)">
+            <label for="solo" class="mode-label">👤 혼자 하기</label>
+            <input type="radio" id="multi" name="mode" value="multi" onclick="togglePeople(true)">
+            <label for="multi" class="mode-label">👥 같이 하기</label>
+        </div>
+        <div id="people-section">
+            <p>몇 명인가요?</p>
+            <input type="number" name="totalPeople" value="2" min="2" max="10">
+        </div>
+        <p>2. 먹고 싶은 음식 (선택사항)</p>
+        <input type="text" name="myFoods" placeholder="예: 치킨, 피자">
+        <p>3. 라운드 수</p>
+        <select name="round" style="padding:10px;">
+            <option value="8">8강</option>
+            <option value="16">16강</option>
+            <option value="32">32강</option>
+        </select>
+        <br><button type="submit">게임 시작하기 🎮</button>
+    </form>
+</div>
+<script>
+    localStorage.clear();
+    function togglePeople(show) { document.getElementById('people-section').style.display = show ? 'block' : 'none'; }
+</script>
+</body>
+</html>

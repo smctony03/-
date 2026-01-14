@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>오늘의 메뉴 결정</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Jua', sans-serif; text-align: center; background-color: #222; color: white; margin: 0; padding-top: 50px; }
+
+        h1 { color: #FFD700; margin-bottom: 10px; }
+        p { color: #ccc; font-size: 1.2rem; }
+
+        .gacha-section { margin-top: 40px; }
+        .card-container { display: flex; justify-content: center; gap: 30px; margin-top: 30px; }
+
+        /* 카드 디자인 */
+        .card {
+            width: 220px; height: 320px;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 80px; cursor: pointer;
+            transition: 0.6s; transform-style: preserve-3d;
+            border: 4px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .card:hover { transform: translateY(-10px); border-color: #FFD700; }
+        .card.flipped { transform: rotateY(180deg); background: white; }
+
+        .card-content { display: none; transform: rotateY(180deg); flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        .card.flipped .card-content { display: flex; }
+        .card.flipped span { display: none; }
+
+        .card-img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 3px solid #ddd; }
+        .card h3 { color: #333; font-size: 1.8rem; margin: 0; }
+        .tag { font-size: 1rem; color: #FF6B6B; margin-top: 5px; font-weight: bold; }
+
+        /* 결과 모달 */
+        .winner-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 999; }
+        .winner-modal img { width: 300px; height: 300px; border-radius: 50%; border: 8px solid gold; margin-bottom: 20px; animation: pop 0.5s; }
+        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+
+        .btn-group { margin-top: 30px; display: flex; gap: 20px; }
+        .btn { padding: 15px 35px; border-radius: 50px; font-size: 1.3rem; text-decoration: none; color: white; font-weight: bold; }
+        .btn-map { background: #03C75A; }
+        .btn-home { background: #FF6B6B; }
+    </style>
+</head>
+<body>
+
+<h1>🔮 운명의 카드 뽑기 🔮</h1>
+<p>1차 우승, 2차 우승, 그리고 AI 추천 메뉴가 숨어있습니다.</p>
+<p>딱 하나만 골라보세요!</p>
+
+<div class="card-container">
+    <div class="card" onclick="flipCard(this, 0)">
+        <span>❓</span>
+        <div class="card-content">
+            <img class="card-img" id="img0" src="">
+            <h3 id="name0">음식</h3>
+            <div class="tag" id="tag0"></div>
+        </div>
+    </div>
+    <div class="card" onclick="flipCard(this, 1)">
+        <span>❓</span>
+        <div class="card-content">
+            <img class="card-img" id="img1" src="">
+            <h3 id="name1">음식</h3>
+            <div class="tag" id="tag1"></div>
+        </div>
+    </div>
+    <div class="card" onclick="flipCard(this, 2)">
+        <span>❓</span>
+        <div class="card-content">
+            <img class="card-img" id="img2" src="">
+            <h3 id="name2">음식</h3>
+            <div class="tag" id="tag2"></div>
+        </div>
+    </div>
+</div>
+
+<div id="winnerModal" class="winner-modal">
+    <h2 style="color:gold;">👑 오늘의 메뉴 확정! 👑</h2>
+    <img id="final-img" src="">
+    <h1 id="final-name" style="font-size: 3.5rem;">음식이름</h1>
+
+    <div class="btn-group">
+        <a href="#" class="btn btn-map" onclick="searchNaver()">📍 맛집 검색</a>
+        <a href="/" class="btn btn-home" onclick="resetAll()">🔄 다시 하기</a>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // 3개의 후보 (1차, 2차, AI)
+    let candidates = [
+        { name: [[${card1.name}]], img: [[${card1.imgUrl}]], type: "🥇 1차전 우승" },
+        { name: [[${card2.name}]], img: [[${card2.imgUrl}]], type: "🥈 2차전 우승" },
+        { name: [[${card3.name}]], img: [[${card3.imgUrl}]], type: "🤖 AI 강력 추천" }
+    ];
+
+    // 카드 섞기 (어디에 뭐가 있는지 모르게)
+    candidates.sort(() => Math.random() - 0.5);
+
+    let isFlipped = false;
+    let finalFoodName = "";
+
+    function flipCard(card, index) {
+        if (isFlipped) return;
+        isFlipped = true;
+
+        // 내용 채우기
+        let picked = candidates[index];
+        document.getElementById("img" + index).src = picked.img;
+        document.getElementById("name" + index).innerText = picked.name;
+        document.getElementById("tag" + index).innerText = picked.type;
+
+        finalFoodName = picked.name;
+
+        // 뒤집기 효과
+        card.classList.add("flipped");
+
+        // 1초 뒤 결과창
+        setTimeout(() => {
+            document.getElementById("final-img").src = picked.img;
+            document.getElementById("final-name").innerText = picked.name;
+            document.getElementById("winnerModal").style.display = "flex";
+        }, 1000);
+    }
+
+    function searchNaver() {
+        if (!finalFoodName) return;
+        window.open("https://map.naver.com/v5/search/" + encodeURIComponent(finalFoodName + " 맛집"), "_blank");
+    }
+
+    function resetAll() {
+        localStorage.clear();
+    }
+</script>
+</body>
+</html>

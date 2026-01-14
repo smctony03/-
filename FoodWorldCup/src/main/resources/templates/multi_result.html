@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 만장일치 추천</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Jua', sans-serif; background-color: #222; color: white; text-align: center; margin: 0; padding-bottom: 50px; }
+
+        /* 헤더 스타일 */
+        .header { background: linear-gradient(135deg, #FF6B6B, #FFD700); padding: 50px 20px; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; margin-bottom: 80px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        h1 { margin: 0; font-size: 1.8rem; text-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+
+        .final-food { font-size: 3.5rem; margin-top: 10px; font-weight: bold; text-shadow: 3px 3px 0px rgba(0,0,0,0.2); }
+
+        .food-img { width: 320px; height: 320px; border-radius: 50%; border: 8px solid white; margin-top: -120px; object-fit: cover; box-shadow: 0 15px 35px rgba(0,0,0,0.6); background-color: #ddd; animation: popIn 0.8s; }
+        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+        .ai-box { background: rgba(255,255,255,0.1); margin: 40px auto; padding: 30px; max-width: 600px; border-radius: 20px; border: 2px solid #555; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .ai-title { color: #FFD700; margin: 0 0 15px 0; font-size: 1.5rem; }
+        .ai-text { font-size: 1.3rem; line-height: 1.6; color: #eee; }
+
+        /* 버튼 그룹 (나란히 배치) */
+        .btn-group { margin-top: 40px; display: flex; justify-content: center; gap: 20px; }
+        .btn { padding: 15px 35px; border-radius: 50px; font-size: 1.3rem; text-decoration: none; color: white; font-weight: bold; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.4); cursor: pointer; }
+
+        .btn-map { background: #03C75A; } /* 네이버 녹색 */
+        .btn-restart { background: #FF6B6B; } /* 붉은색 */
+        .btn:hover { transform: translateY(-5px); filter: brightness(1.1); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🎉 AI가 분석한 우리들의 메뉴 🎉</h1>
+    <div class="final-food" th:text="${finalFood}">음식명</div>
+</div>
+
+<img th:src="${finalImgUrl}" class="food-img">
+
+<div class="ai-box">
+    <h3 class="ai-title">🤖 AI 분석 리포트</h3>
+    <p class="ai-text" th:text="${finalReason}">분석 중...</p>
+</div>
+
+<div class="btn-group">
+    <a href="#" class="btn btn-map" onclick="searchNaver()">📍 주변 맛집 검색</a>
+    <a href="/" class="btn btn-restart">🔄 다시 하기</a>
+</div>
+
+<script th:inline="javascript">
+    let foodName = [[${finalFood}]];
+
+    function searchNaver() {
+        if(!foodName) return;
+        // 네이버 지도 검색 새 창 열기
+        let url = "https://map.naver.com/v5/search/" + encodeURIComponent(foodName + " 맛집");
+        window.open(url, "_blank");
+    }
+</script>
+
+</body>
+</html>
