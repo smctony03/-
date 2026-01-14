@@ -87,22 +87,43 @@ public class GameController {
         return "result";
     }
 
+    // ================= 수정된 Python 실행 메서드 =================
     private String[] safeRunPython(String foodList) {
         StringBuilder output = new StringBuilder();
         try {
+            // 1. 파이썬 실행 경로와 스크립트 경로
             String pythonPath = "C:\\anaconda\\python.exe";
             String scriptPath = "C:\\한국공학대학교 2025년 2학기 자바실습\\FoodWorldCup\\src\\recommend.py";
+
             ProcessBuilder pb = new ProcessBuilder(pythonPath, scriptPath, foodList);
-            pb.redirectErrorStream(true);
+            pb.redirectErrorStream(true); // 에러 출력을 표준 출력에 합침
             Process p = pb.start();
+
+            // 2. UTF-8 인코딩으로 파이썬 출력 읽기
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream(), "UTF-8"));
             String line;
-            while ((line = br.readLine()) != null) output.append(line).append("\n");
+            while ((line = br.readLine()) != null) {
+                // 자바 IDE 콘솔에서 파이썬의 진행 상황과 에러를 실시간 확인
+                System.out.println("[Python Debug]: " + line);
+                output.append(line).append("\n");
+            }
             p.waitFor();
-            String result = output.toString().trim();
-            if (result.contains("|")) return result.split("\\|");
-        } catch (Exception e) { e.printStackTrace(); }
-        return new String[]{"비빔밥", "AI 분석에 실패하여 비빔밥을 추천합니다."};
+
+            String fullResult = output.toString().trim();
+            if (fullResult.isEmpty()) return new String[]{"분석불가", "파이썬으로부터 응답을 받지 못했습니다."};
+
+            // 3. 파이썬이 출력한 내용 중 가장 마지막 줄을 결과로 취급
+            String[] lines = fullResult.split("\n");
+            String lastLine = lines[lines.length - 1];
+
+            if (lastLine.contains("|")) {
+                return lastLine.split("\\|");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // 예외 발생 시 반환할 기본값
+        return new String[]{"비빔밥", "AI 추천 서비스에 일시적인 문제가 있어 기본 메뉴를 추천합니다."};
     }
 
     private Food getOrCreateFood(String name) {
@@ -111,7 +132,6 @@ public class GameController {
 
         Food temp = new Food();
         temp.setName(name);
-        // 이미지가 없는 경우 빈 문자열로 설정하여 AI 생성을 방지합니다.
         temp.setImgUrl("");
         return temp;
     }

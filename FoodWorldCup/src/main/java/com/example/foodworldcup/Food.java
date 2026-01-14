@@ -3,7 +3,7 @@ package com.example.foodworldcup;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "foods") // ★ 중요: MySQL에 만든 테이블 이름이 'foods'라면 꼭 적어야 합니다.
+@Table(name = "foods")
 public class Food {
 
     @Id
@@ -12,8 +12,8 @@ public class Food {
 
     private String name;
 
-    // ★★★ 가장 중요한 수정 부분 ★★★
-    // 자바에서는 imgUrl(카멜케이스)을 쓰지만, DB에는 image_url(스네이크케이스)로 되어있으므로 매핑해줍니다.
+
+
     @Column(name = "image_url")
     private String imgUrl;
 
